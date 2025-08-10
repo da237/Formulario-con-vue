@@ -36,6 +36,7 @@
                         <th>Cédula</th>
                         <th>Celular</th>
                         <th>Email</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,6 +45,11 @@
                         <td>{{ item.cedula }}</td>
                         <td>{{ item.celular }}</td>
                         <td>{{ item.email }}</td>
+                        <td>
+                            <v-btn icon color="red" @click="deletePerson(index)">
+                                <v-icon>mdi-delete</v-icon>
+                            </v-btn>
+                        </td>
                     </tr>
                 </tbody>
             </v-table>
@@ -101,6 +107,15 @@ const addPerson = () => {
     snackbar.value.text = 'Datos agregados con éxito'
     snackbar.value.show = true
 }
+
+const deletePerson = (index) => {
+    datos.value.splice(index, 1); // Elimina el elemento del array
+    localStorage.setItem('datos', JSON.stringify(datos.value)); // Guarda el array actualizado
+    snackbar.value = {
+        text: 'Datos eliminados con éxito',
+        show: true
+    };
+};
 </script>
 
 <style scoped>
