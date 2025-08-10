@@ -1,85 +1,110 @@
 <template>
-  <h1>Formulario</h1>
+    <v-container>
+        <v-card class="pa-6" max-width="600" elevation="4">
+            <v-card-title class="text-h5">Formulario</v-card-title>
+            <v-card-text>
+                <!-- Campo Nombre -->
+                <v-text-field label="Nombre" v-model="persona.nombre" :rules="[v => !!v || 'El nombre es obligatorio']"
+                    clearable />
 
-  <form @submit.prevent="addPerson">
-    <label for="nombre">Nombre</label>
-    <input id="nombre" v-model="persona.nombre" placeholder="Ingrese su nombre" />
+                <!-- Campo Cédula -->
+                <v-text-field label="Cédula" v-model="persona.cedula" :rules="[v => !!v || 'La cédula es obligatoria']"
+                    clearable />
 
-    <label for="cedula">Cédula</label>
-    <input id="cedula" v-model="persona.cedula" placeholder="Ingrese su cédula" />
+                <!-- Campo Celular -->
+                <v-text-field label="Celular" type="number" v-model="persona.celular"
+                    :rules="[v => !!v || 'El celular es obligatorio']" clearable />
 
-    <label for="celular">Celular</label>
-    <input id="celular" v-model="persona.celular" placeholder="Ingrese su celular" />
+                <!-- Campo Email -->
+                <v-text-field label="Correo" v-model="persona.email"
+                    :rules="[v => /.+@.+\..+/.test(v) || 'Correo inválido']" clearable />
 
-    <label for="email">Correo</label>
-    <input id="email" v-model="persona.email" placeholder="Ingrese su correo" />
+                <!-- Botón -->
+                <v-btn color="primary" class="mt-4" @click="addPerson">
+                    Agregar
+                </v-btn>
+            </v-card-text>
+        </v-card>
 
-    <button type="submit">Agregar</button>
-  </form>
+        <!-- Tabla de datos -->
+        <v-card class="mt-6" elevation="4">
+            <v-card-title class="text-h6">Lista de Personas</v-card-title>
+            <v-table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cédula</th>
+                        <th>Celular</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(item, index) in datos" :key="index">
+                        <td>{{ item.nombre }}</td>
+                        <td>{{ item.cedula }}</td>
+                        <td>{{ item.celular }}</td>
+                        <td>{{ item.email }}</td>
+                    </tr>
+                </tbody>
+            </v-table>
+        </v-card>
 
-  <table>
-    <thead>
-      <tr><th>Nombre</th><th>Cédula</th><th>Celular</th><th>Email</th></tr>
-    </thead>
-    <tbody>
-      <tr v-for="(item, index) in datos" :key="item.id ?? index">
-        <td>{{ item.nombre }}</td>
-        <td>{{ item.cedula }}</td>
-        <td>{{ item.celular }}</td>
-        <td>{{ item.email }}</td>
-      </tr>
-    </tbody>
-  </table>
+        <!-- Snackbar -->
+        <v-snackbar v-model="snackbar.show" :timeout="2000" color="success">
+            {{ snackbar.text }}
+        </v-snackbar>
+    </v-container>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue'
 
-const persona = ref({ nombre: '', cedula: '', celular: '', email: '' });
-const datos = ref([]);
+// Datos del formulario
+const persona = ref({
+    nombre: '',
+    cedula: '',
+    celular: '',
+    email: ''
+})
 
+// Lista de personas
+const datos = ref([])
+
+// Estado del snackbar
+const snackbar = ref({
+    show: false,
+    text: ''
+})
+
+// Cargar datos desde localStorage
 onMounted(() => {
-  const saved = localStorage.getItem('datos');
-  if (saved) {
-    try {
-      datos.value = JSON.parse(saved);
-    } catch (e) {
-      console.warn('localStorage datos corruptos, limpiando', e);
-      localStorage.removeItem('datos');
-      datos.value = [];
+    const saved = localStorage.getItem('datos')
+    if (saved) {
+        datos.value = JSON.parse(saved)
     }
-  }
-});
+})
 
-// guarda automáticamente cuando cambian los datos
+// Guardar automáticamente cuando cambien los datos
 watch(datos, (val) => {
-  localStorage.setItem('datos', JSON.stringify(val));
-}, { deep: true });
+    localStorage.setItem('datos', JSON.stringify(val))
+}, { deep: true })
 
-const validateEmail = (s) => /\S+@\S+\.\S+/.test(s);
-
+// Agregar persona
 const addPerson = () => {
-  // trim para evitar solo espacios
-  const n = persona.value.nombre.trim();
-  const c = persona.value.cedula.trim();
-  const cel = persona.value.celular.trim();
-  const e = persona.value.email.trim();
-
-  if (!n || !c || !cel || !e) {
-    alert('Todos los campos son obligatorios');
-    return;
-  }
-  if (!validateEmail(e)) {
-    alert('El email no tiene un formato válido');
-    return;
-  }
-
-  const id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString();
-  const newPerson = { id, nombre: n, cedula: c, celular: cel, email: e };
-
-  datos.value.push(newPerson);
-
-  // limpiar
-  persona.value = { nombre: '', cedula: '', celular: '', email: '' };
-};
+    if (!persona.value.nombre || !persona.value.cedula || !persona.value.celular || !persona.value.email) {
+        snackbar.value.text = 'Todos los campos son obligatorios'
+        snackbar.value.show = true
+        return
+    }
+    datos.value.push({ ...persona.value })
+    persona.value = { nombre: '', cedula: '', celular: '', email: '' }
+    snackbar.value.text = 'Datos agregados con éxito'
+    snackbar.value.show = true
+}
 </script>
+
+<style scoped>
+.v-card {
+    border-radius: 12px;
+}
+</style>
